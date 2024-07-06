@@ -1,4 +1,5 @@
-import { Observable } from "rxjs";
+import { Observable, scan } from "rxjs";
+import { filter, last } from 'rxjs/operators';
 
 interface Data {
   value: number;
@@ -11,6 +12,17 @@ interface Stats {
 }
 
 export function processDataAndComputeStats(input: Observable<Data>): Observable<Stats> {
-  // TODO: 여기에 코드를 작성하세요.
-  return new Observable(); // 타입 에러를 막기 위해서 만들어진 코드입니다.
+  return input.pipe(
+    filter(({ category }) => ['A', 'B'].includes(category)),
+    scan((acc, curr) => {
+      acc.totalSum += curr.value;
+      if (acc.categoryCounts[curr.category]) {
+        acc.categoryCounts[curr.category] += 1;
+      } else {
+        acc.categoryCounts[curr.category] = 1;
+      }
+      return acc;
+    }, { totalSum: 0, categoryCounts: {} }),
+    last()
+  );
 }

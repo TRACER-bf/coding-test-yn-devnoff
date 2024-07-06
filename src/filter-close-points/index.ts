@@ -1,6 +1,24 @@
-import { Observable } from "rxjs";
+import { Observable, scan, filter, map } from "rxjs";
 
 export function filterClosePoints(input: Observable<{ x: number, y: number }>): Observable<{ x: number, y: number }> {
-  // TODO: 여기에 코드를 작성하세요.
-  return new Observable(); // 타입 에러를 막기 위해서 만들어진 코드입니다.
+  return input.pipe(
+    scan((acc, point) => {
+      if (!acc.previousPoint) {
+        return { ...acc, previousPoint: point, emit: true };
+      }
+
+      const distance = Math.sqrt(
+        Math.pow(point.x - acc.previousPoint.x, 2) +
+        Math.pow(point.y - acc.previousPoint.y, 2)
+      );
+
+      if (distance >= 1) {
+        return { previousPoint: point, emit: true };
+      }
+
+      return { ...acc, emit: false };
+    }, { previousPoint: null, emit: false }),
+    filter(state => state.emit),
+    map(state => state.previousPoint),
+  )
 }
